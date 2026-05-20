@@ -5,7 +5,9 @@
 
 # 開発の進め方
 (Node.js,Gitをダウンロードしてなかったらする必要がある)
+
 1.Repositoryをclone
+
 VSCodeのターミナルで
 ```Bash
 git clone https://github.com/Taiyo3901/Hackathon.v1.git
