@@ -1,5 +1,5 @@
 import type { ChangeEvent, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormulaCandidate, PaneId } from "../types/pdf";
 import { copyLatexToClipboard } from "../pdf/formula";
 import { useViewerStore } from "../store/viewerStore";
@@ -32,6 +32,7 @@ export function Sidebar({
   const panes = useViewerStore((state) => state.panes);
   const loadPdf = useViewerStore((state) => state.loadPdf);
   const clearPdf = useViewerStore((state) => state.clearPdf);
+  const jumpToPage = useViewerStore((state) => state.jumpToPage);
   const zoomIn = useViewerStore((state) => state.zoomIn);
   const zoomOut = useViewerStore((state) => state.zoomOut);
   const openLeftPdfOnRightDifferentPage = useViewerStore(
@@ -146,6 +147,7 @@ export function Sidebar({
               effectiveScale={effectiveLeftScale}
               onFileChange={handleFileChange}
               onClear={clearPdf}
+              onJumpPage={jumpToPage}
               onZoomIn={() => zoomIn("left")}
               onZoomOut={() => zoomOut("left")}
             />
@@ -165,6 +167,7 @@ export function Sidebar({
               effectiveScale={effectiveRightScale}
               onFileChange={handleFileChange}
               onClear={clearPdf}
+              onJumpPage={jumpToPage}
               onZoomIn={() => zoomIn("right")}
               onZoomOut={() => zoomOut("right")}
             />
@@ -243,6 +246,7 @@ type PaneControlsProps = {
   effectiveScale: number;
   onFileChange: (pane: PaneId, event: ChangeEvent<HTMLInputElement>) => void;
   onClear: (pane: PaneId) => void;
+  onJumpPage: (pane: PaneId, pageNumber: number) => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
 };
@@ -256,9 +260,33 @@ function PaneControls({
   effectiveScale,
   onFileChange,
   onClear,
+  onJumpPage,
   onZoomIn,
   onZoomOut,
 }: PaneControlsProps) {
+  const [pageInput, setPageInput] = useState(String(pageNumber));
+
+  useEffect(() => {
+    setPageInput(String(pageNumber));
+  }, [pageNumber]);
+
+  const jump = () => {
+    const parsed = Number(pageInput);
+
+    if (!Number.isFinite(parsed)) {
+      setPageInput(String(pageNumber));
+      return;
+    }
+
+    const safePage =
+      totalPages > 0
+        ? Math.min(Math.max(1, Math.floor(parsed)), totalPages)
+        : Math.max(1, Math.floor(parsed));
+
+    setPageInput(String(safePage));
+    onJumpPage(pane, safePage);
+  };
+
   return (
     <div className="pane-controls-inner">
       <div className="file-name">{fileName}</div>
@@ -284,8 +312,27 @@ function PaneControls({
         表示倍率: {Math.round(effectiveScale * 100)}%
       </div>
 
-      <div className="page-info">
-        現在ページ: {pageNumber} / {totalPages || "-"}
+      <div className="page-jump-row">
+        <span>ページ</span>
+
+        <input
+          className="page-jump-input"
+          type="number"
+          min={1}
+          max={totalPages || undefined}
+          value={pageInput}
+          onChange={(event) => setPageInput(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              jump();
+            }
+          }}
+          onBlur={jump}
+        />
+
+        <span>/ {totalPages || "-"}</span>
+
+        <button onClick={jump}>移動</button>
       </div>
 
       <div className="hint">

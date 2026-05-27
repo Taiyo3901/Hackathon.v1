@@ -116,12 +116,12 @@ export function PdfPane({ pane, debugTextLayer, onTextItems }: PdfPaneProps) {
     };
   }, [pane, basePageWidth, setFitScale]);
 
+  // 初回ロード時だけ、現在ページへ移動
   useEffect(() => {
     if (!pdf) return;
     if (initialScrollDoneRef.current) return;
 
-    const targetPage = paneState.pageNumber;
-    const target = pageRefs.current[targetPage];
+    const target = pageRefs.current[paneState.pageNumber];
 
     if (target) {
       target.scrollIntoView({
@@ -132,6 +132,20 @@ export function PdfPane({ pane, debugTextLayer, onTextItems }: PdfPaneProps) {
       initialScrollDoneRef.current = true;
     }
   }, [pdf, paneState.pageNumber]);
+
+  // 数字入力などによる明示的ジャンプ時だけ動く
+  useEffect(() => {
+    if (!pdf) return;
+
+    const target = pageRefs.current[paneState.pageNumber];
+
+    if (!target) return;
+
+    target.scrollIntoView({
+      block: "start",
+      behavior: "smooth",
+    });
+  }, [pdf, paneState.jumpRequestId, paneState.pageNumber]);
 
   const updateDominantVisiblePage = () => {
     const container = containerRef.current;

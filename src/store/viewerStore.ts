@@ -8,6 +8,7 @@ export type PaneState = {
   totalPages: number;
   userScale: number;
   fitScale: number;
+  jumpRequestId: number;
 };
 
 type ViewerState = {
@@ -17,6 +18,7 @@ type ViewerState = {
   clearPdf: (pane: PaneId) => void;
 
   setPageNumber: (pane: PaneId, pageNumber: number) => void;
+  jumpToPage: (pane: PaneId, pageNumber: number) => void;
   setTotalPages: (pane: PaneId, totalPages: number) => void;
 
   zoomIn: (pane: PaneId) => void;
@@ -37,10 +39,25 @@ const initialPaneState: PaneState = {
   totalPages: 0,
   userScale: 1.2,
   fitScale: MAX_SCALE,
+  jumpRequestId: 0,
 };
 
 function clampScale(scale: number): number {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, Number(scale.toFixed(2))));
+}
+
+function clampPage(pageNumber: number, totalPages: number): number {
+  if (!Number.isFinite(pageNumber)) {
+    return 1;
+  }
+
+  const integerPage = Math.floor(pageNumber);
+
+  if (totalPages > 0) {
+    return Math.min(Math.max(1, integerPage), totalPages);
+  }
+
+  return Math.max(1, integerPage);
 }
 
 export const useViewerStore = create<ViewerState>((set) => ({
@@ -60,6 +77,7 @@ export const useViewerStore = create<ViewerState>((set) => ({
           pageNumber: 1,
           totalPages: 0,
           fitScale: MAX_SCALE,
+          jumpRequestId: state.panes[pane].jumpRequestId + 1,
         },
       },
     })),
@@ -75,11 +93,7 @@ export const useViewerStore = create<ViewerState>((set) => ({
   setPageNumber: (pane, pageNumber) =>
     set((state) => {
       const current = state.panes[pane];
-
-      const safePage =
-        current.totalPages > 0
-          ? Math.min(Math.max(1, pageNumber), current.totalPages)
-          : Math.max(1, pageNumber);
+      const safePage = clampPage(pageNumber, current.totalPages);
 
       if (current.pageNumber === safePage) {
         return state;
@@ -96,20 +110,35 @@ export const useViewerStore = create<ViewerState>((set) => ({
       };
     }),
 
-  setTotalPages: (pane, totalPages) =>
+  jumpToPage: (pane, pageNumber) =>
     set((state) => {
       const current = state.panes[pane];
+      const safePage = clampPage(pageNumber, current.totalPages);
 
       return {
         panes: {
           ...state.panes,
           [pane]: {
             ...current,
-            totalPages,
-            pageNumber: Math.min(
-              Math.max(1, current.pageNumber),
-              Math.max(1, totalPages)
-            ),
+            pageNumber: safePage,
+            jumpRequestId: current.jumpRequestId + 1,
+          },
+        },
+      };
+    }),
+
+  setTotalPages: (pane, totalPages) =>
+    set((state) => {
+      const current = state.panes[pane];
+      const safeTotalPages = Math.max(0, totalPages);
+
+      return {
+        panes: {
+          ...state.panes,
+          [pane]: {
+            ...current,
+            totalPages: safeTotalPages,
+            pageNumber: clampPage(current.pageNumber, safeTotalPages),
           },
         },
       };
@@ -193,9 +222,9 @@ export const useViewerStore = create<ViewerState>((set) => ({
         return state;
       }
 
-      const preferredPage = Math.min(
+      const preferredPage = clampPage(
         left.pageNumber + 1,
-        Math.max(1, left.totalPages || left.pageNumber + 1)
+        left.totalPages || left.pageNumber + 1
       );
 
       return {
@@ -209,6 +238,7 @@ export const useViewerStore = create<ViewerState>((set) => ({
             totalPages: left.totalPages,
             userScale: left.userScale,
             fitScale: MAX_SCALE,
+            jumpRequestId: state.panes.right.jumpRequestId + 1,
           },
         },
       };
