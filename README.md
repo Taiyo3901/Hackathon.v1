@@ -57,9 +57,10 @@ npm run build
 5. manifest/backgroundコピー
 
 毎回必要。
-PowerShellなら：
-```PowerShell
+```Bash
 copy extension\manifest.json dist\
+```
+```Bash
 copy extension\background.js dist\
 ```
 
