@@ -85,13 +85,13 @@ git clone https://github.com/Taiyo3901/Hackathon.v1.git
 cd Hackathon.v1
 ```
 
-2. npm install
+2. distフォルダーの作成
 
 ```Bash
 npm install
 ```
 
-3. 開発サーバ起動
+3. 開発サーバ起動。別タブを開き、この実行を止めない
 
 ```Bash
 npm run dev
@@ -103,9 +103,8 @@ npm run dev
 npm run build
 ```
 
-5. manifest/backgroundコピー
+5. 変更した内容をdistフォルダーに反映させる
 
-毎回必要。
 ```Bash
 copy extension\manifest.json dist\
 ```
