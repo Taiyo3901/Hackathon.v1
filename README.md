@@ -1,7 +1,74 @@
-# ソースコードの実際の動かし方
+# "PDFren"でもっと豊かに!!
+このプログラムは普段PDFを開く際の不満から作り上げた、Chrome拡張機能となっています。​
 
-ダウンロード後「chrome://extensions/」でChromeを開き、右上にあるデベロッパーモードONにしてパッケージ化されていない拡張機能を読み込むをクリック。そしてこのフォルダーのdistフォルダーを選択。
-これで、PDFをChromeで開けば、自作のViewerへ開ける。
+---
+
+## 主な機能
+- 指定したページのジャンプ機能​
+
+- 文字選択とコピー​
+
+- 左右独立した2画面表示​
+
+- PDF内の数式をLaTex形式でコピー
+
+---
+
+## 実行環境
+- Windows
+- macOS
+- Linux
+- PC版Google Chrome
+- Chrome拡張機能が利用できるブラウザ環境
+
+---
+
+## 実装方法
+
+1.Releaseブランチからzipファイルをダウンロード
+
+2.Chromeを起動させ、Chromeの拡張機能ページ(chrome://extensions/)を開く
+
+3.右上にあるデベロッパーモードONにしてパッケージ化されていない拡張機能を読み込むをクリック
+
+4.ダウンロードしたzipファイルを解凍し、フォルダー内のpaper-viewer-v1.0という名前のフォルダーを選択
+
+---
+
+## 使用技術
+
+このプロジェクトでは、主に以下の技術を使用しています。
+
+| 技術 | 用途 |
+|---|---|
+| React | 画面UIの構築 |
+| TypeScript | 型安全な実装 |
+| Vite | 開発環境・ビルド |
+| CSS | レイアウトや表示制御 |
+| PDF.js / pdfjs-dist | PDFの読み込み・描画・文字情報取得 |
+| Zustand | PDFビューアの状態管理 |
+| tesseract.js | OCRによる文字認識 |
+| Chrome Extension Manifest V3 | Chrome拡張機能の実装 |
+
+---
+
+## 仕組み
+
+### 1. PDFを自作ビューアで開く
+
+ChromeでPDFを開くと、拡張機能がPDFのURLを検知します。
+
+その後、Chrome標準のPDFビューアではなく、自作ビューアのURLにリダイレクトします。
+
+```txt
+PDFのURL
+↓
+Chrome拡張機能が検知
+↓
+自作PDFビューアで表示
+```
+
+---
 
 # 開発の進め方
 (Node.js,Gitをダウンロードしてなかったらする必要がある)
@@ -18,13 +85,13 @@ git clone https://github.com/Taiyo3901/Hackathon.v1.git
 cd Hackathon.v1
 ```
 
-2. npm install
+2. distフォルダーの作成
 
 ```Bash
 npm install
 ```
 
-3. 開発サーバ起動
+3. 開発サーバ起動。別タブを開き、この実行を止めない
 
 ```Bash
 npm run dev
@@ -36,12 +103,12 @@ npm run dev
 npm run build
 ```
 
-5. manifest/backgroundコピー
+5. 変更した内容をdistフォルダーに反映させる
 
-毎回必要。
-PowerShellなら：
-```PowerShell
+```Bash
 copy extension\manifest.json dist\
+```
+```Bash
 copy extension\background.js dist\
 ```
 
@@ -65,80 +132,3 @@ distフォルダ選択
 
 8. テスト
 適当なPDFファイルを開く
-
-
-
-
-# React + TypeScript + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
