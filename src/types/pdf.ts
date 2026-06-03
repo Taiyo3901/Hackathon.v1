@@ -15,6 +15,10 @@ export type PdfTextItem = {
   width: number;
   height: number;
   page: number;
+
+  fontName?: string;
+  fontFamily?: string;
+  isBold?: boolean;
 };
 
 export type FormulaCandidate = {

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";import { pdfjsLib } from "../lib/pdfjs";
+import { useEffect, useMemo, useRef } from "react";
+import { pdfjsLib } from "../lib/pdfjs";
 import type { PdfTextItem } from "../types/pdf";
 
 type TextLayerProps = {
@@ -15,6 +16,9 @@ type PositionedTextItem = {
   y: number;
   width: number;
   height: number;
+  fontName?: string;
+  fontFamily?: string;
+  isBold?: boolean;
 };
 
 function getTextContentSignature(textContent: any): string {
@@ -28,6 +32,21 @@ function getTextContentSignature(textContent: any): string {
   const last = String(items[items.length - 1]?.str ?? "");
 
   return `${items.length}:${first}:${last}`;
+}
+
+function isBoldFont(fontName?: string, fontFamily?: string): boolean {
+  const source = `${fontName ?? ""} ${fontFamily ?? ""}`.toLowerCase();
+
+  return (
+    source.includes("bold") ||
+    source.includes("black") ||
+    source.includes("heavy") ||
+    source.includes("semibold") ||
+    source.includes("demibold") ||
+    source.includes("medium") ||
+    source.includes("gothicbbb") ||
+    source.includes("gothic")
+  );
 }
 
 export function TextLayer({
@@ -57,6 +76,7 @@ export function TextLayer({
 
   useEffect(() => {
     const container = layerRef.current;
+
     if (!container) return;
 
     const handleNativeSelectStart = (event: Event) => {
@@ -80,6 +100,7 @@ export function TextLayer({
     container.innerHTML = "";
 
     const rawItems = textContent.items as any[];
+    const styles = textContent.styles ?? {};
 
     const positionedItems: PositionedTextItem[] = rawItems
       .filter((item) => {
@@ -103,12 +124,25 @@ export function TextLayer({
           Math.abs((item.width ?? 0) * viewport.scale) ||
           Math.max(String(item.str).length * height * 0.5, 1);
 
+        const fontName =
+          typeof item.fontName === "string" ? item.fontName : undefined;
+
+        const styleInfo = fontName ? styles[fontName] : undefined;
+
+        const fontFamily =
+          typeof styleInfo?.fontFamily === "string"
+            ? styleInfo.fontFamily
+            : undefined;
+
         const positionedItem: PositionedTextItem = {
           str: String(item.str),
           x,
           y: baselineY - height,
           width,
           height,
+          fontName,
+          fontFamily,
+          isBold: isBoldFont(fontName, fontFamily),
         };
 
         return positionedItem;
@@ -130,6 +164,9 @@ export function TextLayer({
       width: item.width,
       height: item.height,
       page: pageNumber,
+      fontName: item.fontName,
+      fontFamily: item.fontFamily,
+      isBold: item.isBold,
     }));
 
     const fragment = document.createDocumentFragment();
@@ -158,9 +195,13 @@ export function TextLayer({
       span.style.cursor = "text";
 
       if (debug) {
-        span.style.color = "red";
-        span.style.background = "rgba(255,0,0,0.15)";
-        span.style.outline = "1px solid rgba(255,0,0,0.4)";
+        span.style.color = item.isBold ? "blue" : "red";
+        span.style.background = item.isBold
+          ? "rgba(0,120,255,0.15)"
+          : "rgba(255,0,0,0.15)";
+        span.style.outline = item.isBold
+          ? "1px solid rgba(0,120,255,0.5)"
+          : "1px solid rgba(255,0,0,0.4)";
       } else {
         span.style.color = "transparent";
         span.style.background = "transparent";
@@ -195,11 +236,9 @@ export function TextLayer({
         height: `${viewport.height}px`,
         overflow: "hidden",
         zIndex: 10,
-
         userSelect: "none",
         WebkitUserSelect: "none",
         pointerEvents: "auto",
-
         border: debug ? "1px solid red" : "none",
       }}
     />
