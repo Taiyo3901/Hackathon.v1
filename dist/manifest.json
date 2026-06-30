@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Paper PDF Analyzer",
+  "version": "1.0.0",
+  "description": "論文閲覧特化PDF解析Viewer",
+  "permissions": ["tabs"],
+  "host_permissions": ["<all_urls>", "file:///*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["index.html", "assets/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "action": {
+    "default_title": "Paper PDF Analyzer"
+  }
+}
